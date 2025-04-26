@@ -16,14 +16,95 @@
             font-family: sans-serif;
             color: white;
         }
+        
+        #gameboy-container {
+            position: relative;
+            width: 320px;
+            text-align: center;
+        }
+        
+        canvas {
+            border: 1px solid #444;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        button {
+            background: #444;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #555;
+        }
     </style>
 </head>
 <body>
+    <div id="gameboy-container">
+        <h2>GameBoy Emulator</h2>
+        <div>
+            <canvas id="screen" width="160" height="144"></canvas>
+        </div>
+        <div class="controls">
+            <button id="load-rom">Load ROM</button>
+            <button id="pause">Pause</button>
+        </div>
+        <div id="status"></div>
+        <div id="game-name"></div>
+        <div id="error" class="hide"></div>
+    </div>
 
-    <!-- Your content goes here -->
-
-    <script type="module" src="./gameboy.js"></script>
+    <!-- Core components -->
+    <script src="js/utils/util.js"></script>
+    <script src="js/utils/exceptions.js"></script>
+    <script src="js/utils/debug.js"></script>
+    
+    <!-- Hardware components -->
+    <script src="js/core/memory.js"></script>
+    <script src="js/core/screen.js"></script>
+    <script src="js/core/gpu.js"></script>
+    <script src="js/core/timer.js"></script>
+    <script src="js/core/mbc.js"></script>
+    <script src="js/core/extram.js"></script>
+    
+    <!-- Input handling -->
+    <script src="js/input/input.js"></script>
+    <script src="js/input/keyboard.js"></script>
+    <script src="js/input/gamepad.js"></script>
+    
+    <!-- Audio -->
+    <script src="js/audio/channel1.js"></script>
+    <script src="js/audio/channel3.js"></script>
+    <script src="js/audio/channel4.js"></script>
+    <script src="js/audio/apu.js"></script>
+    <script src="js/audio/serial.js"></script>
+    
+    <!-- CPU and opcodes -->
+    <script src="js/core/cpu-ops.js"></script>
+    <script src="js/core/opcode-map.js"></script>
+    <script src="js/core/cpu.js"></script>
+    
+    <!-- ROM handling -->
+    <script src="js/rom/rom.js"></script>
+    <script src="js/rom/rom-readers.js"></script>
+    
+    <!-- Main gameboy class -->
+    <script src="js/core/gameboy.js"></script>
+    <script src="js/boot.js"></script>
+    
+    <!-- Main initialization script -->
+    <script src="js/main.js"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
-
