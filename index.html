@@ -66,6 +66,26 @@
         a {
             color: #999;
         }
+        #audio-permission {
+            background-color: #555;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        #audio-permission button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -76,6 +96,11 @@
 
 <div id="container">
 
+<div id="audio-permission" class="hide">
+    <p>This emulator requires audio permission for the best experience.</p>
+    <button id="enable-audio">Enable Audio</button>
+</div>
+
 <div class="canvas-container"><canvas id="canvas">Your browser does not seem to support canvas.</canvas></div>
 
 <p class="commands">
@@ -83,7 +108,7 @@
     <button onclick="g.pause(false);">Run</button>
 </p>
 <p class="commands">
-    <label><input id="sound-enable" type="checkbox" onchange="g.setSoundEnabled(this.checked);"/> Enable sound (experimental)</label>
+    <label><input id="sound-enable" type="checkbox" checked onchange="g.setSoundEnabled(this.checked);"/> Enable sound (experimental)</label>
 </p>
 <p class="commands">
     <label>
@@ -138,26 +163,51 @@
 <script src="./gameboy.js"></script>
 
 <script>
-// configuration
-var opts = {
-    romReaders: [
-        new GameboyJS.RomFileReader(),
-        new GameboyJS.RomDropFileReader(document.getElementById('dropzone'))
-    ]
-};
-var g = new GameboyJS.Gameboy(document.getElementById('canvas'), opts);
-g.setSoundEnabled(document.getElementById('sound-enable').checked);
-g.setScreenZoom(document.getElementById('screen-zoom').value);
+// Audio context initialization
+let audioContext = null;
 
-// Set up boot ROM
-function setupGameboy() {
-    var cpu = new GameboyJS.CPU();
-    loadboot(cpu);
+function initAudio() {
+    try {
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContext();
+        
+        // If audio context is suspended (needs user interaction)
+        if (audioContext.state === 'suspended') {
+            document.getElementById('audio-permission').classList.remove('hide');
+        } else {
+            setupGameboy();
+        }
+    } catch (e) {
+        console.error("Web Audio API is not supported in this browser");
+        setupGameboy();
+    }
 }
 
-// When document is loaded, initialize the Gameboy
+document.getElementById('enable-audio').addEventListener('click', function() {
+    if (audioContext) {
+        audioContext.resume().then(() => {
+            document.getElementById('audio-permission').classList.add('hide');
+            setupGameboy();
+        });
+    }
+});
+
+// configuration
+function setupGameboy() {
+    var opts = {
+        romReaders: [
+            new GameboyJS.RomFileReader(),
+            new GameboyJS.RomDropFileReader(document.getElementById('dropzone'))
+        ]
+    };
+    var g = new GameboyJS.Gameboy(document.getElementById('canvas'), opts);
+    g.setSoundEnabled(document.getElementById('sound-enable').checked);
+    g.setScreenZoom(document.getElementById('screen-zoom').value);
+}
+
+// When document is loaded, initialize the Audio
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("GameBoy emulator initialized!");
+    initAudio();
 });
 </script>
 
