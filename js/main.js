@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fileInput.addEventListener('change', function(e) {
             // This will be handled by the ROM reader
         });
+    }); 
     
     document.getElementById('pause').addEventListener('click', function() {
         // Toggle pause state
