@@ -165,6 +165,7 @@
 <script>
 // Audio context initialization
 let audioContext = null;
+var g; // Make g variable global
 
 function initAudio() {
     try {
@@ -200,7 +201,7 @@ function setupGameboy() {
             new GameboyJS.RomDropFileReader(document.getElementById('dropzone'))
         ]
     };
-    var g = new GameboyJS.Gameboy(document.getElementById('canvas'), opts);
+    g = new GameboyJS.Gameboy(document.getElementById('canvas'), opts);
     g.setSoundEnabled(document.getElementById('sound-enable').checked);
     g.setScreenZoom(document.getElementById('screen-zoom').value);
 }
