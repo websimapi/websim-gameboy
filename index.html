@@ -160,56 +160,61 @@
 
 </div>
 
-<script src="./gameboy.js"></script>
-
-<script>
-// Audio context initialization
-let audioContext = null;
-var g; // Make g variable global
-
-function initAudio() {
-    try {
-        window.AudioContext = window.AudioContext || window.webkitAudioContext;
-        audioContext = new AudioContext();
-        
-        // If audio context is suspended (needs user interaction)
-        if (audioContext.state === 'suspended') {
-            document.getElementById('audio-permission').classList.remove('hide');
-        } else {
-            setupGameboy();
-        }
-    } catch (e) {
-        console.error("Web Audio API is not supported in this browser");
-        setupGameboy();
-    }
-}
-
-document.getElementById('enable-audio').addEventListener('click', function() {
-    if (audioContext) {
-        audioContext.resume().then(() => {
-            document.getElementById('audio-permission').classList.add('hide');
-            setupGameboy();
-        });
-    }
-});
-
-// configuration
-function setupGameboy() {
-    var opts = {
-        romReaders: [
-            new GameboyJS.RomFileReader(),
-            new GameboyJS.RomDropFileReader(document.getElementById('dropzone'))
-        ]
-    };
-    g = new GameboyJS.Gameboy(document.getElementById('canvas'), opts);
-    g.setSoundEnabled(document.getElementById('sound-enable').checked);
-    g.setScreenZoom(document.getElementById('screen-zoom').value);
-}
-
-// When document is loaded, initialize the Audio
-document.addEventListener('DOMContentLoaded', function() {
-    initAudio();
-});
+<script type="module">
+  // Import our main module
+  import { Gameboy } from './js/core/gameboy.js';
+  import { RomFileReader } from './js/io/rom-file-reader.js';
+  import { RomDropFileReader } from './js/io/rom-drop-file-reader.js';
+  
+  // Make Gameboy class globally available
+  window.GameboyJS = { Gameboy, RomFileReader, RomDropFileReader };
+  
+  // Audio context initialization
+  let audioContext = null;
+  
+  function initAudio() {
+      try {
+          window.AudioContext = window.AudioContext || window.webkitAudioContext;
+          audioContext = new AudioContext();
+          
+          // If audio context is suspended (needs user interaction)
+          if (audioContext.state === 'suspended') {
+              document.getElementById('audio-permission').classList.remove('hide');
+          } else {
+              setupGameboy();
+          }
+      } catch (e) {
+          console.error("Web Audio API is not supported in this browser");
+          setupGameboy();
+      }
+  }
+  
+  document.getElementById('enable-audio').addEventListener('click', function() {
+      if (audioContext) {
+          audioContext.resume().then(() => {
+              document.getElementById('audio-permission').classList.add('hide');
+              setupGameboy();
+          });
+      }
+  });
+  
+  // configuration
+  function setupGameboy() {
+      var opts = {
+          romReaders: [
+              new GameboyJS.RomFileReader(),
+              new GameboyJS.RomDropFileReader(document.getElementById('dropzone'))
+          ]
+      };
+      window.g = new GameboyJS.Gameboy(document.getElementById('canvas'), opts);
+      g.setSoundEnabled(document.getElementById('sound-enable').checked);
+      g.setScreenZoom(document.getElementById('screen-zoom').value);
+  }
+  
+  // When document is loaded, initialize the Audio
+  document.addEventListener('DOMContentLoaded', function() {
+      initAudio();
+  });
 </script>
 
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
