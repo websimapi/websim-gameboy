@@ -47,50 +47,51 @@ function UnimplementedException(message, fatal) {
 GameboyJS.UnimplementedException = UnimplementedException;
 
 // Screen device
-var Screen = function(canvas, pixelSize) {
+GameboyJS.Screen = function(canvas, pixelSize) {
     this.context = canvas.getContext('2d');
     this.canvas = canvas;
     this.pixelSize = pixelSize || 1;
+    this.physics = GameboyJS.Screen.physics; 
     this.initImageData();
 };
 
-Screen.colors = [
+GameboyJS.Screen.colors = [
     0xFF,
     0xAA,
     0x55,
     0x00
 ];
 
-Screen.physics = {
+GameboyJS.Screen.physics = {
     WIDTH    : 160,
     HEIGHT   : 144,
     FREQUENCY: 60
 };
 
-Screen.prototype.setPixelSize = function(pixelSize) {
+GameboyJS.Screen.prototype.setPixelSize = function(pixelSize) {
     this.pixelSize = pixelSize;
     this.initImageData();
 };
 
-Screen.prototype.initImageData = function() {
-    this.canvas.width = Screen.physics.WIDTH * this.pixelSize;
-    this.canvas.height = Screen.physics.HEIGHT * this.pixelSize;
+GameboyJS.Screen.prototype.initImageData = function() {
+    this.canvas.width = GameboyJS.Screen.physics.WIDTH * this.pixelSize;
+    this.canvas.height = GameboyJS.Screen.physics.HEIGHT * this.pixelSize;
     this.imageData = this.context.createImageData(this.canvas.width, this.canvas.height);
 };
 
-Screen.prototype.clearScreen = function() {
+GameboyJS.Screen.prototype.clearScreen = function() {
     this.context.fillStyle = '#FFF';
-    this.context.fillRect(0, 0, Screen.physics.WIDTH * this.pixelSize, Screen.physics.HEIGHT * this.pixelSize);
+    this.context.fillRect(0, 0, GameboyJS.Screen.physics.WIDTH * this.pixelSize, GameboyJS.Screen.physics.HEIGHT * this.pixelSize);
 };
 
-Screen.prototype.fillImageData = function(buffer) {
-    for (var y = 0; y < Screen.physics.HEIGHT; y++) {
+GameboyJS.Screen.prototype.fillImageData = function(buffer) {
+    for (var y = 0; y < GameboyJS.Screen.physics.HEIGHT; y++) {
         for (var py = 0; py < this.pixelSize; py++) {
             var _y = y * this.pixelSize + py;
-            for (var x = 0; x < Screen.physics.WIDTH; x++) {
+            for (var x = 0; x < GameboyJS.Screen.physics.WIDTH; x++) {
                 for (var px = 0; px < this.pixelSize; px++) {
                     var offset = _y * this.canvas.width + (x * this.pixelSize + px);
-                    var v = Screen.colors[buffer[y * Screen.physics.WIDTH + x]];
+                    var v = GameboyJS.Screen.colors[buffer[y * GameboyJS.Screen.physics.WIDTH + x]];
                     this.imageData.data[offset * 4] = v;
                     this.imageData.data[offset * 4 + 1] = v;
                     this.imageData.data[offset * 4 + 2] = v;
@@ -101,16 +102,14 @@ Screen.prototype.fillImageData = function(buffer) {
     }
 };
 
-Screen.prototype.render = function(buffer) {
+GameboyJS.Screen.prototype.render = function(buffer) {
     this.fillImageData(buffer);
     this.context.putImageData(this.imageData, 0, 0);
 };
 
-GameboyJS.Screen = Screen;
-
 // Memory unit
-var Memory = function(cpu) {
-    this.MEM_SIZE = 65536; // 64KB
+GameboyJS.Memory = function(cpu) {
+    this.MEM_SIZE = 65536; 
 
     this.MBCtype = 0;
     this.banksize = 0x4000;
@@ -119,7 +118,7 @@ var Memory = function(cpu) {
     this.cpu = cpu;
 };
 
-Memory.addresses = {
+GameboyJS.Memory.addresses = {
     VRAM_START : 0x8000,
     VRAM_END   : 0x9FFF,
 
@@ -134,20 +133,20 @@ Memory.addresses = {
 };
 
 // Memory can be accessed as an Array
-Memory.prototype = new Array();
+GameboyJS.Memory.prototype = new Array();
 
-Memory.prototype.reset = function() {
+GameboyJS.Memory.prototype.reset = function() {
     this.length = this.MEM_SIZE;
-    for (var i = Memory.addresses.VRAM_START; i <= Memory.addresses.VRAM_END; i++) {
+    for (var i = GameboyJS.Memory.addresses.VRAM_START; i <= GameboyJS.Memory.addresses.VRAM_END; i++) {
         this[i] = 0;
     }
-    for (var i = Memory.addresses.DEVICE_START; i <= Memory.addresses.DEVICE_END; i++) {
+    for (var i = GameboyJS.Memory.addresses.DEVICE_START; i <= GameboyJS.Memory.addresses.DEVICE_END; i++) {
         this[i] = 0;
     }
     this[0xFFFF] = 0;
 };
 
-Memory.prototype.setRomData = function(data) {
+GameboyJS.Memory.prototype.setRomData = function(data) {
     this.rom = data;
     this.loadRomBank(0);
     this.mbc = GameboyJS.MBC.getMbcInstance(this, this[0x147]);
@@ -155,7 +154,7 @@ Memory.prototype.setRomData = function(data) {
     this.mbc.loadRam(this.cpu.getGameName(), this.cpu.getRamSize());
 };
 
-Memory.prototype.loadRomBank = function(index) {
+GameboyJS.Memory.prototype.loadRomBank = function(index) {
     var start = index ? 0x4000 : 0x0;
     var romStart = index * 0x4000;
     for (var i = 0; i < this.banksize; i++) {
@@ -164,8 +163,8 @@ Memory.prototype.loadRomBank = function(index) {
 };
 
 // Video ram accessor
-Memory.prototype.vram = function(address) {
-    if (address < Memory.addresses.VRAM_START || address > Memory.addresses.VRAM_END) {
+GameboyJS.Memory.prototype.vram = function(address) {
+    if (address < GameboyJS.Memory.addresses.VRAM_START || address > GameboyJS.Memory.addresses.VRAM_END) {
         throw 'VRAM access in out of bounds address ' + address;
     }
 
@@ -173,8 +172,8 @@ Memory.prototype.vram = function(address) {
 };
 
 // OAM ram accessor
-Memory.prototype.oamram = function(address) {
-    if (address < Memory.addresses.OAM_START || address > Memory.addresses.OAM_END) {
+GameboyJS.Memory.prototype.oamram = function(address) {
+    if (address < GameboyJS.Memory.addresses.OAM_START || address > GameboyJS.Memory.addresses.OAM_END) {
         throw 'OAMRAM access in out of bounds address ' + address;
     }
 
@@ -182,8 +181,8 @@ Memory.prototype.oamram = function(address) {
 };
 
 // Device ram accessor
-Memory.prototype.deviceram = function(address, value) {
-    if (address < Memory.addresses.DEVICE_START || address > Memory.addresses.DEVICE_END) {
+GameboyJS.Memory.prototype.deviceram = function(address, value) {
+    if (address < GameboyJS.Memory.addresses.DEVICE_START || address > GameboyJS.Memory.addresses.DEVICE_END) {
         throw 'Device RAM access in out of bounds address ' + address;
     }
     if (typeof value === "undefined") {
@@ -195,7 +194,7 @@ Memory.prototype.deviceram = function(address, value) {
 
 // Memory read proxy function
 // Used to centralize memory read access
-Memory.prototype.rb = function (addr) {
+GameboyJS.Memory.prototype.rb = function (addr) {
     if (addr >= 0xFF10 && addr < 0xFF40) {
         var mask = apuMask[addr - 0xFF10];
         return this[addr] | mask;
@@ -221,7 +220,7 @@ var apuMask = [
 // Memory write proxy function
 // Used to centralize memory writes and delegate specific behaviour
 // to the correct units
-Memory.prototype.wb = function(addr, value) {
+GameboyJS.Memory.prototype.wb = function(addr, value) {
     if (addr < 0x8000 || (addr >= 0xA000 && addr < 0xC000)) { // MBC
         this.mbc.manageWrite(addr, value);
     } else if (addr >= 0xFF10 && addr <= 0xFF3F) { // sound registers
@@ -247,17 +246,15 @@ Memory.prototype.wb = function(addr, value) {
 }
 
 // Start a DMA transfer (OAM data from cartrige to RAM)
-Memory.prototype.dmaTransfer = function(startAddressPrefix) {
+GameboyJS.Memory.prototype.dmaTransfer = function(startAddressPrefix) {
     var startAddress = (startAddressPrefix << 8);
     for (var i = 0; i < 0xA0; i++) {
-        this[Memory.addresses.OAM_START + i] = this[startAddress + i];
+        this[GameboyJS.Memory.addresses.OAM_START + i] = this[startAddress + i];
     }
 };
 
-GameboyJS.Memory = Memory;
-
 // RomFileReader implementation
-var RomFileReader = function(el) {
+GameboyJS.RomFileReader = function(el) {
     this.domElement = el || document.getElementById('file');
     if (!this.domElement) {
         throw 'The RomFileReader needs a valid input element.';
@@ -271,12 +268,12 @@ var RomFileReader = function(el) {
 
 // The callback argument will be called when a file is successfully
 // read, with the data as argument (Uint8Array)
-RomFileReader.prototype.setCallback = function(onLoadCallback) {
+GameboyJS.RomFileReader.prototype.setCallback = function(onLoadCallback) {
     this.callback = onLoadCallback;
 };
 
 // Automatically called when the DOM input is provided with a file
-RomFileReader.prototype.loadFromFile = function(file) {
+GameboyJS.RomFileReader.prototype.loadFromFile = function(file) {
     if (file === undefined) {
         return;
     }
@@ -292,10 +289,8 @@ RomFileReader.prototype.loadFromFile = function(file) {
     fr.readAsArrayBuffer(file);
 };
 
-GameboyJS.RomFileReader = RomFileReader;
-
 // RomDropFileReader implementation
-var RomDropFileReader = function(el) {
+GameboyJS.RomDropFileReader = function(el) {
     this.dropElement = el;
     if (!this.dropElement) {
         throw 'The RomDropFileReader needs a drop zone.';
@@ -325,12 +320,12 @@ var RomDropFileReader = function(el) {
 
 // The callback argument will be called when a file is successfully
 // read, with the data as argument (Uint8Array)
-RomDropFileReader.prototype.setCallback = function(onLoadCallback) {
+GameboyJS.RomDropFileReader.prototype.setCallback = function(onLoadCallback) {
     this.callback = onLoadCallback;
 };
 
 // The file loading logic is the same as the regular file reader
-RomDropFileReader.prototype.loadFromFile = function(file) {
+GameboyJS.RomDropFileReader.prototype.loadFromFile = function(file) {
     if (file === undefined) {
         return;
     }
@@ -346,17 +341,15 @@ RomDropFileReader.prototype.loadFromFile = function(file) {
     fr.readAsArrayBuffer(file);
 };
 
-GameboyJS.RomDropFileReader = RomDropFileReader;
-
 // Rom implementation
-var Rom = function(gameboy, romReader) {
+GameboyJS.Rom = function(gameboy, romReader) {
     this.gameboy = gameboy;
     if (romReader) {
         this.addReader(romReader);
     }
 };
 
-Rom.prototype.addReader = function(romReader) {
+GameboyJS.Rom.prototype.addReader = function(romReader) {
     var self = this;
     romReader.setCallback(function(data) {
         if (!validate(data)) {
@@ -376,8 +369,6 @@ function validate(data) {
     }
     return (hash & 0xFF) == data[0x14D];
 };
-
-GameboyJS.Rom = Rom;
 
 // MBC implementation
 GameboyJS.MBC = {};
@@ -560,11 +551,11 @@ MBC0.prototype.readRam = function(addr) {return 0;};
 MBC0.prototype.loadRam = function() {};
 
 // Keyboard implementation
-var Keyboard = function() {};
+GameboyJS.Keyboard = function() {};
 
 // Initialize the keyboard listeners and set up the callbacks
 // for button press / release
-Keyboard.prototype.init = function(onPress, onRelease) {
+GameboyJS.Keyboard.prototype.init = function(onPress, onRelease) {
     this.onPress = onPress;
     this.onRelease = onRelease;
 
@@ -577,14 +568,14 @@ Keyboard.prototype.init = function(onPress, onRelease) {
     });
 }
 
-Keyboard.prototype.managePress = function(keycode) {
+GameboyJS.Keyboard.prototype.managePress = function(keycode) {
     var key = this.translateKey(keycode);
     if (key) {
         this.onPress(key);
     }
 };
 
-Keyboard.prototype.manageRelease = function(keycode) {
+GameboyJS.Keyboard.prototype.manageRelease = function(keycode) {
     var key = this.translateKey(keycode);
     if (key) {
         this.onRelease(key);
@@ -592,7 +583,7 @@ Keyboard.prototype.manageRelease = function(keycode) {
 };
 
 // Transform a keyboard keycode into a key of the Input.keys object
-Keyboard.prototype.translateKey = function(keycode) {
+GameboyJS.Keyboard.prototype.translateKey = function(keycode) {
     var key = null;
     switch (keycode) {
         case 71: // G
@@ -624,10 +615,8 @@ Keyboard.prototype.translateKey = function(keycode) {
     return key;
 };
 
-GameboyJS.Keyboard = Keyboard;
-
 // Input implementation
-var Input = function(cpu, pad) {
+GameboyJS.Input = function(cpu, pad) {
     this.cpu = cpu;
     this.memory = cpu.memory;
     this.P1 = 0xFF00;
@@ -636,7 +625,7 @@ var Input = function(cpu, pad) {
     pad.init(this.pressKey.bind(this), this.releaseKey.bind(this));
 };
 
-Input.keys = {
+GameboyJS.Input.keys = {
     START:  0x80,
     SELECT: 0x40,
     B:      0x20,
@@ -647,18 +636,17 @@ Input.keys = {
     RIGHT:  0x01
 };
 
-Input.prototype.pressKey = function(key) {
-    this.state |= Input.keys[key];
-
+GameboyJS.Input.prototype.pressKey = function(key) {
+    this.state |= GameboyJS.Input.keys[key];
     this.cpu.requestInterrupt(GameboyJS.CPU.INTERRUPTS.HILO);
 };
 
-Input.prototype.releaseKey = function(key) {
-    var mask = 0xFF - Input.keys[key];
+GameboyJS.Input.prototype.releaseKey = function(key) {
+    var mask = 0xFF - GameboyJS.Input.keys[key];
     this.state &= mask;
 };
 
-Input.prototype.update = function() {
+GameboyJS.Input.prototype.update = function() {
     var value = this.memory.rb(this.P1);
     value = ((~value) & 0x30); // invert the value so 1 means 'active'
     if (value & 0x10) { // direction keys listened
@@ -673,10 +661,8 @@ Input.prototype.update = function() {
     this.memory[this.P1] = value;
 };
 
-GameboyJS.Input = Input;
-
 // Timer implementation
-var Timer = function(cpu, memory) {
+GameboyJS.Timer = function(cpu, memory) {
     this.cpu    = cpu;
     this.memory = memory;
 
@@ -689,12 +675,12 @@ var Timer = function(cpu, memory) {
     this.divTime   = 0;
 };
 
-Timer.prototype.update = function(clockElapsed) {
+GameboyJS.Timer.prototype.update = function(clockElapsed) {
     this.updateDiv(clockElapsed);
     this.updateTimer(clockElapsed);
 };
 
-Timer.prototype.updateTimer = function(clockElapsed) {
+GameboyJS.Timer.prototype.updateTimer = function(clockElapsed) {
     if (!(this.memory.rb(this.TAC) & 0x4)) {
         return;
     }
@@ -720,7 +706,7 @@ Timer.prototype.updateTimer = function(clockElapsed) {
     }
 };
 
-Timer.prototype.updateDiv = function(clockElapsed) {
+GameboyJS.Timer.prototype.updateDiv = function(clockElapsed) {
     var divThreshold = 256; // DIV is 16KHz
     this.divTime += clockElapsed;
     if (this.divTime > divThreshold) {
@@ -730,15 +716,51 @@ Timer.prototype.updateDiv = function(clockElapsed) {
     }
 };
 
-Timer.prototype.resetDiv = function() {
+GameboyJS.Timer.prototype.resetDiv = function() {
     this.divTime = 0;
     this.memory[this.DIV] = 0; // direct write to avoid looping
 };
 
-GameboyJS.Timer = Timer;
+// GPU implementation (simplified for now)
+GameboyJS.GPU = function(screen, cpu) {
+    this.cpu = cpu;
+    this.screen = screen;
+    
+    // Use the screen's physics properties correctly
+    this.width = GameboyJS.Screen.physics.WIDTH;
+    this.height = GameboyJS.Screen.physics.HEIGHT;
+    
+    // Basic buffer initialization
+    this.buffer = new Array(this.width * this.height);
+    for (var i = 0; i < this.buffer.length; i++) {
+        this.buffer[i] = 0; // Initialize with white color
+    }
+    
+    this.clock = 0;
+    this.vblankTime = 70224; // CPU cycles per frame (4.194304MHz / ~60Hz)
+};
+
+GameboyJS.GPU.prototype.update = function(clockElapsed) {
+    this.clock += clockElapsed;
+    
+    // For now, just return true occasionally to simulate vblank
+    if (this.clock >= this.vblankTime) {
+        this.clock = 0;
+        
+        // Render the current buffer (for now just a placeholder gray screen)
+        this.screen.render(this.buffer);
+        
+        // Trigger VBLANK interrupt
+        this.cpu.requestInterrupt(GameboyJS.CPU.INTERRUPTS.VBLANK);
+        
+        return true;
+    }
+    
+    return false;
+};
 
 // CPU implementation
-var CPU = function(gameboy) {
+GameboyJS.CPU = function(gameboy) {
     this.gameboy = gameboy;
 
     this.r = {A:0, F: 0, B:0, C:0, D:0, E:0, H:0, L:0, pc:0, sp:0};
@@ -751,7 +773,7 @@ var CPU = function(gameboy) {
     this.createDevices();
 };
 
-CPU.INTERRUPTS = {
+GameboyJS.CPU.INTERRUPTS = {
     VBLANK: 0,
     LCDC:   1,
     TIMER:  2,
@@ -759,30 +781,40 @@ CPU.INTERRUPTS = {
     HILO:   4
 };
 
-CPU.prototype.createDevices = function() {
+// Simple stub for interruptRoutines
+GameboyJS.CPU.interruptRoutines = {
+    0: function(){},
+    1: function(){},
+    2: function(){},
+    3: function(){},
+    4: function(){}
+};
+
+GameboyJS.CPU.prototype.createDevices = function() {
     this.memory = new GameboyJS.Memory(this);
     this.timer = new GameboyJS.Timer(this, this.memory);
     this.apu = {
         connect: function(){},
         disconnect: function(){},
-        update: function(){}
-    }; // Stub APU
+        update: function(){},
+        manageWrite: function(){}
+    }; 
 
-    this.SERIAL_INTERNAL_INSTR = 512; // instr to wait per bit if internal clock
+    this.SERIAL_INTERNAL_INSTR = 512; 
     this.enableSerial = 0;
-    this.serialHandler = GameboyJS.ConsoleSerial;
+    this.serialHandler = { out: function(){}, in: function(){ return 0; } }; 
 };
 
-CPU.prototype.reset = function() {
+GameboyJS.CPU.prototype.reset = function() {
     this.memory.reset();
     this.r.sp = 0xFFFE;
 };
 
-CPU.prototype.loadRom = function(data) {
+GameboyJS.CPU.prototype.loadRom = function(data) {
     this.memory.setRomData(data);
 };
 
-CPU.prototype.getRamSize = function() {
+GameboyJS.CPU.prototype.getRamSize = function() {
     var size = 0;
     switch (this.memory.rb(0x149)) {
         case 1:
@@ -798,7 +830,7 @@ CPU.prototype.getRamSize = function() {
     return size;
 };
 
-CPU.prototype.getGameName = function() {
+GameboyJS.CPU.prototype.getGameName = function() {
     var name = '';
     for (var i = 0x134; i < 0x143; i++) {
         var char = this.memory.rb(i) || 32;
@@ -807,7 +839,7 @@ CPU.prototype.getGameName = function() {
     return name;
 };
 
-CPU.prototype.run = function() {
+GameboyJS.CPU.prototype.run = function() {
     if (this.usingBootRom) {
         this.r.pc = 0x0000;
     } else {
@@ -816,11 +848,11 @@ CPU.prototype.run = function() {
     this.frame();
 };
 
-CPU.prototype.stop = function() {
+GameboyJS.CPU.prototype.stop = function() {
     clearTimeout(this.nextFrameTimer);
 };
 
-CPU.prototype.frame = function() {
+GameboyJS.CPU.prototype.frame = function() {
     if (!this.isPaused) {
         this.nextFrameTimer = setTimeout(this.frame.bind(this), 1000 / GameboyJS.Screen.physics.FREQUENCY);
     }
@@ -829,19 +861,10 @@ CPU.prototype.frame = function() {
         var vblank = false;
         while (!vblank) {
             var oldInstrCount = this.clock.c;
+            
+            // Simplified CPU execution - for now we'll just increment the clock
             if (!this.isHalted) {
-                var opcode = this.fetchOpcode();
-                // Use opcode handling logic here
-                // ...
-                this.r.F &= 0xF0; // tmp fix
-
-                if (this.enableSerial) {
-                    var instr = this.clock.c - oldInstrCount;
-                    this.clock.serial += instr;
-                    if (this.clock.serial >= 8 * this.SERIAL_INTERNAL_INSTR) {
-                        this.endSerialTransfer();
-                    }
-                }
+                this.clock.c += 4;
             } else {
                 this.clock.c += 4;
             }
@@ -859,47 +882,55 @@ CPU.prototype.frame = function() {
     }
 };
 
-CPU.prototype.fetchOpcode = function() {
-    // Opcode fetching implemented here
+GameboyJS.CPU.prototype.fetchOpcode = function() {
+    // Simplified for now
     return 0;
 };
 
-CPU.prototype.halt = function() {
+GameboyJS.CPU.prototype.halt = function() {
     this.isHalted = true;
 };
 
-CPU.prototype.unhalt = function() {
+GameboyJS.CPU.prototype.unhalt = function() {
     this.isHalted = false;
 };
 
-CPU.prototype.pause = function() {
+GameboyJS.CPU.prototype.pause = function() {
     this.isPaused = true;
 };
 
-CPU.prototype.unpause = function() {
+GameboyJS.CPU.prototype.unpause = function() {
     if (this.isPaused) {
         this.isPaused = false;
         this.frame();
     }
 };
 
-CPU.prototype.checkInterrupt = function() {
-    // Interrupt handling implemented here
+GameboyJS.CPU.prototype.checkInterrupt = function() {
+    // Simplified interrupt check for now
 };
 
-CPU.prototype.requestInterrupt = function(type) {
+GameboyJS.CPU.prototype.requestInterrupt = function(type) {
     var IFval = this.memory.rb(0xFF0F);
     IFval |= (1 << type)
     this.memory.wb(0xFF0F, IFval);
     this.unhalt();
 };
 
-CPU.prototype.enableSerialTransfer = function() {
+GameboyJS.CPU.prototype.enableInterrupts = function() {
+    this.IME = true;
+};
+
+GameboyJS.CPU.prototype.disableInterrupts = function() {
+    this.IME = false;
+};
+
+GameboyJS.CPU.prototype.enableSerialTransfer = function() {
     this.enableSerial = 1;
     this.clock.serial = 0;
 };
 
-CPU.prototype.endSerialTransfer = function() {
+GameboyJS.CPU.prototype.endSerialTransfer = function() {
     this.enableSerial = 0;
     var data = this.memory.rb(0xFF01);
     this.memory.wb(0xFF02, 0);
@@ -907,26 +938,9 @@ CPU.prototype.endSerialTransfer = function() {
     this.memory.wb(0xFF01, this.serialHandler.in());
 };
 
-CPU.prototype.resetDivTimer = function() {
+GameboyJS.CPU.prototype.resetDivTimer = function() {
     this.timer.resetDiv();
 };
-
-GameboyJS.CPU = CPU;
-
-// GPU implementation (minimal)
-var GPU = function(screen, cpu) {
-    this.cpu = cpu;
-    this.screen = screen;
-    // Basic implementation
-    this.buffer = new Array(screen.physics.WIDTH * screen.physics.HEIGHT);
-};
-
-GPU.prototype.update = function(clockElapsed) {
-    // Return true periodically to simulate vblank
-    return Math.random() < 0.01;
-};
-
-GameboyJS.GPU = GPU;
 
 // Gameboy main class
 var defaultOptions = {
@@ -938,7 +952,7 @@ var defaultOptions = {
     errorContainerId: 'error'
 };
 
-var Gameboy = function(canvas, options) {
+GameboyJS.Gameboy = function(canvas, options) {
     options = options || {};
     this.options = GameboyJS.Util.extend({}, defaultOptions, options);
 
@@ -963,7 +977,7 @@ var Gameboy = function(canvas, options) {
     this.errorContainer    = document.getElementById(this.options.errorContainerId) || document.createElement('div');
 };
 
-Gameboy.prototype.createRom = function (readers) {
+GameboyJS.Gameboy.prototype.createRom = function (readers) {
     var rom = new GameboyJS.Rom(this);
     if (readers.length == 0) {
         // add the default rom reader
@@ -978,7 +992,7 @@ Gameboy.prototype.createRom = function (readers) {
     }
 };
 
-Gameboy.prototype.startRom = function(rom) {
+GameboyJS.Gameboy.prototype.startRom = function(rom) {
     this.errorContainer.classList.add('hide');
     this.cpu.reset();
     try {
@@ -991,7 +1005,7 @@ Gameboy.prototype.startRom = function(rom) {
     }
 };
 
-Gameboy.prototype.pause = function(value) {
+GameboyJS.Gameboy.prototype.pause = function(value) {
     if (value) {
         this.setStatus('Game Paused :');
         this.cpu.pause();
@@ -1001,26 +1015,26 @@ Gameboy.prototype.pause = function(value) {
     }
 };
 
-Gameboy.prototype.error = function(message) {
+GameboyJS.Gameboy.prototype.error = function(message) {
     this.setStatus('Error during execution');
     this.setError('An error occurred during execution:' + message);
     this.cpu.stop();
 };
 
-Gameboy.prototype.setStatus = function(status) {
+GameboyJS.Gameboy.prototype.setStatus = function(status) {
     this.statusContainer.innerHTML = status;
 };
 
-Gameboy.prototype.setError = function(message) {
+GameboyJS.Gameboy.prototype.setError = function(message) {
     this.errorContainer.classList.remove('hide');
     this.errorContainer.innerHTML = message;
 };
 
-Gameboy.prototype.setGameName = function(name) {
+GameboyJS.Gameboy.prototype.setGameName = function(name) {
     this.gameNameContainer.innerHTML = name;
 };
 
-Gameboy.prototype.setSoundEnabled = function(value) {
+GameboyJS.Gameboy.prototype.setSoundEnabled = function(value) {
     if (value) {
         this.cpu.apu.connect();
     } else {
@@ -1028,11 +1042,11 @@ Gameboy.prototype.setSoundEnabled = function(value) {
     }
 };
 
-Gameboy.prototype.setScreenZoom = function(value) {
+GameboyJS.Gameboy.prototype.setScreenZoom = function(value) {
     this.screen.setPixelSize(value);
 };
 
-Gameboy.prototype.handleException = function(e) {
+GameboyJS.Gameboy.prototype.handleException = function(e) {
     if (e instanceof GameboyJS.UnimplementedException) {
         if (e.fatal) {
             this.error('This cartridge is not supported ('+ e.message +')');
@@ -1044,4 +1058,8 @@ Gameboy.prototype.handleException = function(e) {
     }
 };
 
-GameboyJS.Gameboy = Gameboy;
+// Add serial handler stub
+GameboyJS.ConsoleSerial = {
+    out: function(data) { console.log("Serial output:", data); },
+    in: function() { return 0; }
+};
